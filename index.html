@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>看板搭建Agent - 数据流架构图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #0f1117;
+    color: #e1e4e8;
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .page-title h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .page-title p {
+    font-size: 14px;
+    color: #8b949e;
+  }
+
+  /* ==================== OVERVIEW FLOW ==================== */
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #58a6ff;
+    margin-bottom: 24px;
+    padding-left: 16px;
+    border-left: 3px solid #58a6ff;
+  }
+
+  .overview-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 56px;
+    flex-wrap: wrap;
+    padding: 32px 16px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .input-box, .agent-box, .output-box {
+    padding: 16px 20px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 140px;
+  }
+
+  .input-box {
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.3);
+  }
+  .input-box .label {
+    font-size: 11px;
+    color: #58a6ff;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .input-box .value {
+    font-size: 13px;
+    color: #c9d1d9;
+    line-height: 1.5;
+  }
+
+  .agent-box {
+    background: rgba(63, 185, 80, 0.08);
+    border: 2px solid rgba(63, 185, 80, 0.4);
+    min-width: 150px;
+    position: relative;
+  }
+  .agent-box .agent-id {
+    font-size: 11px;
+    color: #3fb950;
+    font-weight: 600;
+  }
+  .agent-box .agent-name {
+    font-size: 15px;
+    color: #fff;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  .output-box {
+    background: rgba(210, 153, 34, 0.1);
+    border: 1px solid rgba(210, 153, 34, 0.3);
+  }
+  .output-box .label {
+    font-size: 11px;
+    color: #d29922;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .output-box .value {
+    font-size: 13px;
+    color: #c9d1d9;
+    line-height: 1.5;
+  }
+
+  .arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    color: #484f58;
+    font-size: 20px;
+  }
+  .arrow-down {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0;
+    color: #484f58;
+    font-size: 20px;
+    width: 100%;
+  }
+
+  /* ==================== AGENT DETAIL CARDS ==================== */
+  .agent-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .agent-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .agent-card:hover {
+    border-color: rgba(63, 185, 80, 0.4);
+  }
+
+  .agent-card-header {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .agent-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .agent-1 .agent-icon { background: rgba(136, 87, 229, 0.15); }
+  .agent-2 .agent-icon { background: rgba(63, 185, 80, 0.15); }
+  .agent-3 .agent-icon { background: rgba(88, 166, 255, 0.15); }
+  .agent-4 .agent-icon { background: rgba(210, 153, 34, 0.15); }
+
+  .agent-card-header .info h3 {
+    font-size: 16px;
+    color: #fff;
+    font-weight: 700;
+  }
+  .agent-card-header .info p {
+    font-size: 13px;
+    color: #8b949e;
+    margin-top: 2px;
+  }
+
+  /* Input/Output badges */
+  .io-bar {
+    display: flex;
+    padding: 16px 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .io-group {
+    flex: 1;
+    min-width: 240px;
+  }
+  .io-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .io-label.input { color: #58a6ff; }
+  .io-label.output { color: #d29922; }
+
+  .io-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .io-tag {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+  .io-tag.in {
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.2);
+    color: #79c0ff;
+  }
+  .io-tag.out {
+    background: rgba(210, 153, 34, 0.1);
+    border: 1px solid rgba(210, 153, 34, 0.2);
+    color: #e3b341;
+  }
+
+  /* Internal flow */
+  .internal-flow {
+    padding: 0 24px 24px;
+  }
+  .internal-flow-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8b949e;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .flow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  .flow-step {
+    display: flex;
+    gap: 16px;
+    position: relative;
+  }
+
+  .step-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 32px;
+    flex-shrink: 0;
+  }
+
+  .step-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #3fb950;
+    background: #0f1117;
+    z-index: 1;
+  }
+  .step-dot.processing {
+    background: #3fb950;
+    box-shadow: 0 0 8px rgba(63, 185, 80, 0.4);
+  }
+
+  .step-connector {
+    width: 2px;
+    flex: 1;
+    min-height: 16px;
+    background: rgba(63, 185, 80, 0.2);
+  }
+
+  .flow-step:last-child .step-connector {
+    display: none;
+  }
+
+  .step-content {
+    flex: 1;
+    padding-bottom: 20px;
+  }
+
+  .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #c9d1d9;
+    margin-bottom: 6px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: #8b949e;
+    line-height: 1.6;
+  }
+
+  .step-details {
+    margin-top: 8px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #8b949e;
+    line-height: 1.7;
+  }
+
+  .step-details code {
+    background: rgba(136, 87, 229, 0.15);
+    color: #d2a8ff;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 11px;
+  }
+
+  .step-details .highlight {
+    color: #3fb950;
+    font-weight: 600;
+  }
+
+  /* Decision diamond */
+  .decision-box {
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(210, 153, 34, 0.08);
+    border: 1px solid rgba(210, 153, 34, 0.2);
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .decision-box .diamond {
+    color: #d29922;
+    font-weight: bold;
+  }
+  .decision-box .text {
+    color: #e3b341;
+  }
+  .decision-box .branch {
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+  }
+  .decision-box .branch span {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: default;
+  }
+  .branch-yes {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+    border: 1px solid rgba(63, 185, 80, 0.3);
+  }
+  .branch-no {
+    background: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+    border: 1px solid rgba(248, 81, 73, 0.3);
+  }
+
+  /* ==================== RESPONSIVE ==================== */
+  @media (max-width: 768px) {
+    body { padding: 20px; }
+    .overview-flow { flex-direction: column; gap: 8px; }
+    .arrow { transform: rotate(90deg); padding: 4px 0; }
+    .arrow-down { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>看板搭建 Agent 数据流架构</h1>
+  <p>一期方案 · 4个Agent串行编排 · 输出搭建方案文档</p>
+</div>
+
+<!-- ==================== OVERVIEW FLOW ==================== -->
+<h2 class="section-title">全局数据流</h2>
+<div class="overview-flow">
+  <div class="input-box">
+    <div class="label">人工输入</div>
+    <div class="value">需求描述<br>数据源信息<br>表间关联关系<br>口径说明</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="agent-box">
+    <div class="agent-id">Agent ①</div>
+    <div class="agent-name">需求解析</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="agent-box">
+    <div class="agent-id">Agent ②</div>
+    <div class="agent-name">语义模型</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="agent-box">
+    <div class="agent-id">Agent ③</div>
+    <div class="agent-name">图表设计</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="agent-box">
+    <div class="agent-id">Agent ④</div>
+    <div class="agent-name">方案生成</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="output-box">
+    <div class="label">最终输出</div>
+    <div class="value">语义模型搭建指南<br>看板搭建指南</div>
+  </div>
+  <div class="arrow">→</div>
+  <div style="padding: 16px 20px; border-radius: 12px; min-width: 150px; background: rgba(248, 81, 73, 0.08); border: 2px solid rgba(248, 81, 73, 0.4); text-align: center;">
+    <div style="font-size: 11px; color: #f85149; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">人机协作</div>
+    <div style="font-size: 15px; color: #fff; font-weight: 700; margin-top: 2px;">👤 人工审核</div>
+  </div>
+</div>
+
+
+<!-- ==================== AGENT DETAIL CARDS ==================== -->
+<div class="agent-cards">
+
+  <!-- ========== AGENT 1: 需求解析 ========== -->
+  <div class="agent-card agent-1">
+    <div class="agent-card-header">
+      <div class="agent-icon">🧠</div>
+      <div class="info">
+        <h3>Agent ① 需求解析</h3>
+        <p>模糊的自然语言需求 → 结构化看板规格书</p>
+      </div>
+    </div>
+
+    <div class="io-bar">
+      <div class="io-group">
+        <div class="io-label input">📥 输入</div>
+        <div class="io-items">
+          <span class="io-tag in">自然语言需求</span>
+          <span class="io-tag in">数据源信息</span>
+          <span class="io-tag in">口径说明</span>
+          <span class="io-tag in">表间关联关系</span>
+        </div>
+      </div>
+      <div class="io-group">
+        <div class="io-label output">📤 输出</div>
+        <div class="io-items">
+          <span class="io-tag out">看板规格书 (JSON)</span>
+          <span class="io-tag out">指标清单</span>
+          <span class="io-tag out">维度需求</span>
+          <span class="io-tag out">筛选需求</span>
+          <span class="io-tag out">隐含需求标注</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="internal-flow">
+      <div class="internal-flow-title">内部处理流程</div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot processing"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 1: 意图识别</div>
+            <div class="step-desc">解析分析师的自然语言描述，提取核心意图</div>
+            <div class="step-details">
+              <span class="highlight">LLM 推理</span><br>
+              "搭一个电商大促日报看板"<br>
+              → 识别主题：<code>电商大促</code>，类型：<code>日报</code>，目标：<code>看板</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot processing"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 2: 指标/维度提取</div>
+            <div class="step-desc">从需求和口径说明中提取所有需要的指标和维度</div>
+            <div class="step-details">
+              <span class="highlight">规则 + LLM 混合</span><br>
+              需求中提及的指标 → 直接提取<br>
+              口径说明中的衍生指标 → 关联提取<br>
+              隐含指标 → 推理补充（如"日报"→ 同比/环比）
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 3: 隐含需求推理</div>
+            <div class="step-desc">根据业务场景自动补充分析师没说但需要的分析维度</div>
+            <div class="step-details">
+              <span class="highlight">行业知识库 + LLM</span><br>
+              "日报" → 自动添加 <code>day_over_day</code>、<code>week_over_week</code><br>
+              "大促" → 自动添加 <code>活动期 vs 日常期对比</code><br>
+              "GMV趋势" → 自动添加 <code>移动平均线</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 4: 口径完整性检查</div>
+            <div class="step-desc">对照口径说明，检查是否所有需要的指标都有明确定义</div>
+            <div class="decision-box">
+              <span class="diamond">◆</span>
+              <span class="text">需求中提到的指标在口径说明中是否有定义？</span>
+              <div class="branch">
+                <span class="branch-yes">✓ 完整 → 继续</span>
+                <span class="branch-no">✗ 缺失 → 标记待确认</span>
+              </div>
+            </div>
+            <div class="step-details">
+              ⚠️ 例：<code>渠道ROI</code> 需求中提到但口径说明中未定义<br>
+              → 在规格书中标记为 <span class="highlight">"待确认口径"</span>，不阻塞后续流程
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 5: 输出看板规格书</div>
+            <div class="step-desc">生成结构化 JSON，包含看板名称、分区块、每个区块的指标/维度/图表类型</div>
+            <div class="step-details">
+              <code>{"dashboard_name", "refresh_freq", "global_filters", "sections": [{"title", "metrics", "dimensions", "chart_type", "compare"}]}</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========== AGENT 2: 语义模型 ========== -->
+  <div class="agent-card agent-2">
+    <div class="agent-card-header">
+      <div class="agent-icon">🏗️</div>
+      <div class="info">
+        <h3>Agent ② 语义模型</h3>
+        <p>数据源 + 口径 → 语义模型定义 + SQL + 自定义指标</p>
+      </div>
+    </div>
+
+    <div class="io-bar">
+      <div class="io-group">
+        <div class="io-label input">📥 输入</div>
+        <div class="io-items">
+          <span class="io-tag in">数据源（表名+字段）</span>
+          <span class="io-tag in">表间关联关系</span>
+          <span class="io-tag in">口径说明</span>
+          <span class="io-tag in">看板规格书（来自①）</span>
+        </div>
+      </div>
+      <div class="io-group">
+        <div class="io-label output">📤 输出</div>
+        <div class="io-items">
+          <span class="io-tag out">语义模型SQL</span>
+          <span class="io-tag out">维度识别+调整建议</span>
+          <span class="io-tag out">度量识别+调整建议</span>
+          <span class="io-tag out">自定义指标 (CASE WHEN)</span>
+          <span class="io-tag out">模型拆分建议</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="internal-flow">
+      <div class="internal-flow-title">内部处理流程</div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot processing"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 1: JOIN关系构建</div>
+            <div class="step-desc">根据用户提供的关联关系，生成多表 JOIN SQL</div>
+            <div class="step-details">
+              <span class="highlight">规则引擎 + LLM</span><br>
+              用户提供关联 → 直接按 JOIN 条件生成<br>
+              未提供 → LLM 根据字段名推理（如 <code>channel_id</code>）→ 请用户确认<br><br>
+              <strong>JOIN 类型决策：</strong><br>
+              · 维度表（dim_xxx）→ <code>LEFT JOIN</code>（保留主表数据）<br>
+              · 事实明细表 → <code>INNER JOIN</code><br>
+              · 退款/评价等稀疏表 → <code>LEFT JOIN</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot processing"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 2: WHERE 过滤条件生成</div>
+            <div class="step-desc">根据口径说明，在 SQL 中添加模型级的过滤条件</div>
+            <div class="step-details">
+              <span class="highlight">规则引擎</span><br>
+              · 口径中的时间范围 → <code>WHERE dt BETWEEN ...</code><br>
+              · 排除无效数据 → <code>WHERE order_status != 'cancelled'</code><br>
+              · 多个条件 → AND 组合<br><br>
+              <strong>⚠️ 注意：</strong>模型级过滤影响所有度量，仅放置<strong>通用过滤</strong>；<br>
+              度量级差异过滤放 Step 4 的 CASE WHEN 中
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot processing"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 3: 模型复杂度评估 & 拆分建议</div>
+            <div class="step-desc">评估单条 SQL 是否过于复杂，必要时建议拆分为多个语义模型</div>
+            <div class="decision-box">
+              <span class="diamond">◆</span>
+              <span class="text">关联表数量 > 5 或口径差异大？</span>
+              <div class="branch">
+                <span class="branch-yes">建议拆分</span>
+                <span class="branch-no">单模型</span>
+              </div>
+            </div>
+            <div class="step-details">
+              <strong>拆分场景示例：</strong><br>
+              · 口径过滤条件差异大（如 GMV 仅 paid，订单量排除 cancelled）<br>
+              → 方案：统一用最宽过滤，各指标内 CASE WHEN 补过滤<br><br>
+              · 关联表太多（>5 张）<br>
+              → 方案：拆成 2-3 个语义模型（如订单模型 + 退款模型）
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 4: 维度/指标自动识别 + 调整建议</div>
+            <div class="step-desc">模拟 BI 平台自动解析，并标注需要人工调整的项</div>
+            <div class="step-details">
+              <span class="highlight">规则引擎 + LLM</span><br><br>
+              <strong>维度分类规则：</strong><br>
+              · STRING + 低基数 → 维度候选<br>
+              · 含 date/dt/time → 日期维度，自动推导粒度（日/周/月）<br>
+              · 含 ID 后缀 → ⚠️ 系统可能误判为维度，需手动移除<br><br>
+              <strong>度量分类规则：</strong><br>
+              · NUMERIC → 度量候选（SUM/AVG）<br>
+              · 含 ID 后缀 → <code>COUNT(DISTINCT)</code><br>
+              · 特殊字段 → 需人工确认（如 <code>order_status</code> 可能是维度也可能是过滤条件）
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 5: 自定义/复杂指标生成</div>
+            <div class="step-desc">基于口径说明生成需要手工添加的自定义指标</div>
+            <div class="step-details">
+              <span class="highlight">LLM + 规则后处理</span><br><br>
+              <strong>处理策略：</strong><br>
+              · CASE WHEN 过滤 → <code>SUM(CASE WHEN status='paid' THEN amount ELSE 0 END)</code><br>
+              · 指标间引用 → <code>[净GMV] / NULLIF([有效订单量], 0)</code>，标注依赖<br>
+              · 窗口函数 → <code>当日 / LAG(当日, 7)</code>，生成 CTE<br>
+              · 任何除法 → 统一加 <code>NULLIF(..., 0)</code> 防止除零<br><br>
+              <strong>依赖排序：</strong>先定义基础度量，再定义引用型衍生指标
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 6: 输出语义模型搭建指南</div>
+            <div class="step-desc">汇总以上步骤，输出完整的语义模型搭建文档</div>
+            <div class="step-details">
+              文档包含：<br>
+              · 语义模型 SQL（多表 JOIN + WHERE）<br>
+              · 维度识别结果 + <span class="highlight">调整建议</span><br>
+              · 度量识别结果 + <span class="highlight">调整建议</span><br>
+              · 自定义指标（含 CASE WHEN 表达式）<br>
+              · 性能/拆分注意事项
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========== AGENT 3: 图表设计 ========== -->
+  <div class="agent-card agent-3">
+    <div class="agent-card-header">
+      <div class="agent-icon">📊</div>
+      <div class="info">
+        <h3>Agent ③ 图表设计</h3>
+        <p>看板规格书 + 语义模型定义 → 图表选型 + SQL + 布局 + 交互</p>
+      </div>
+    </div>
+
+    <div class="io-bar">
+      <div class="io-group">
+        <div class="io-label input">📥 输入</div>
+        <div class="io-items">
+          <span class="io-tag in">看板规格书（来自①）</span>
+          <span class="io-tag in">语义模型定义（来自②）</span>
+          <span class="io-tag in">可用维度/度量列表</span>
+        </div>
+      </div>
+      <div class="io-group">
+        <div class="io-label output">📤 输出</div>
+        <div class="io-items">
+          <span class="io-tag out">看板布局方案</span>
+          <span class="io-tag out">每个图表配置详情</span>
+          <span class="io-tag out">图表级SQL</span>
+          <span class="io-tag out">筛选器配置</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="internal-flow">
+      <div class="internal-flow-title">内部处理流程</div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot processing"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 1: 规格书 ↔ 语义模型 对齐检查</div>
+            <div class="step-desc">检查需求中的每个指标是否都在语义模型中有对应度量定义</div>
+            <div class="decision-box">
+              <span class="diamond">◆</span>
+              <span class="text">需求指标在语义模型中是否都有对应度量？</span>
+              <div class="branch">
+                <span class="branch-yes">✓ 全部匹配 → 继续</span>
+                <span class="branch-no">✗ 缺失 → 回退请求补充</span>
+              </div>
+            </div>
+            <div class="step-details">
+              例：需求要"退款率"，但语义模型中只有 refund_amount 和 pay_amount<br>
+              → 退款率是衍生指标，需在语义模型中添加（回退到 Agent ② 补充）
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot processing"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 2: 图表选型</div>
+            <div class="step-desc">为看板规格书中的每个区块推荐最合适的图表类型</div>
+            <div class="step-details">
+              <span class="highlight">确定性规则（优先命中）</span><br>
+              · 趋势/日变化 → <code>折线图</code><br>
+              · 对比/TOP N → <code>柱状图</code><br>
+              · 占比/分布 → <code>饼图/环形图</code><br>
+              · 单个KPI → <code>指标卡</code><br>
+              · 层级占比 → <code>矩形树图</code><br><br>
+              <span class="highlight">LLM 兜底（规则未命中时）</span><br>
+              分析指标+维度的数据特征 → 推荐最合适图表
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 3: 图表 SQL 生成</div>
+            <div class="step-desc">为每个图表生成独立的查询 SQL（基于语义模型SQL + 图表维度/度量）</div>
+            <div class="step-details">
+              <span class="highlight">基于语义模型SQL扩展</span><br>
+              · 复用语义模型的 <code>FROM ... JOIN ... WHERE</code><br>
+              · 替换 <code>SELECT</code> 为当前图表所需的维度+度量<br>
+              · 追加图表级筛选条件（如品类 = '电子产品'）<br>
+              · 添加排序（<code>ORDER BY</code>）和限制（<code>TOP N</code>）<br><br>
+              <strong>多语义模型场景：</strong>明确标注每个图表使用哪个语义模型
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 4: 布局编排</div>
+            <div class="step-desc">规划看板的整体布局结构</div>
+            <div class="step-details">
+              <span class="highlight">布局规则引擎</span><br>
+              · 第一行：核心KPI指标卡（一行 3-4 个）<br>
+              · 第二行：趋势图 + 对比图（2列布局）<br>
+              · 第三行：分布图/明细表<br>
+              · 高优先级指标 → 占据更大面积<br>
+              · 同维度图表 → 放在同一行便于联动
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 5: 筛选器 & 联动设计</div>
+            <div class="step-desc">配置全局筛选器、图表间联动关系</div>
+            <div class="step-details">
+              <span class="highlight">筛选器规则</span><br>
+              · 日期维度 → 默认加日期范围筛选器<br>
+              · 分类字段（唯一值 < 50）→ 可选筛选器<br>
+              · 同维度图表 → 点击联动过滤<br>
+              · 筛选器类型：单选 / 多选 / 日期范围 / 搜索下拉
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 6: 样式建议</div>
+            <div class="step-desc">为每个图表提供基础样式配置建议</div>
+            <div class="step-details">
+              · 指标卡：数字格式、同比颜色（涨红跌绿）<br>
+              · 折线图：是否需要双Y轴、数据标签、平滑曲线<br>
+              · 柱状图：排序方式、颜色方案、是否堆叠<br>
+              · 饼图：TOP N + 其他、标签显示
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========== AGENT 4: 方案生成 ========== -->
+  <div class="agent-card agent-4">
+    <div class="agent-card-header">
+      <div class="agent-icon">📋</div>
+      <div class="info">
+        <h3>Agent ④ 方案生成</h3>
+        <p>汇总所有 Agent 的产出 → 输出完整、可直接执行的搭建方案文档</p>
+      </div>
+    </div>
+
+    <div class="io-bar">
+      <div class="io-group">
+        <div class="io-label input">📥 输入</div>
+        <div class="io-items">
+          <span class="io-tag in">看板规格书（来自①）</span>
+          <span class="io-tag in">语义模型指南（来自②）</span>
+          <span class="io-tag in">图表设计方案（来自③）</span>
+        </div>
+      </div>
+      <div class="io-group">
+        <div class="io-label output">📤 输出</div>
+        <div class="io-items">
+          <span class="io-tag out">📄 语义模型搭建指南.md</span>
+          <span class="io-tag out">📄 看板搭建指南.md</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="internal-flow">
+      <div class="internal-flow-title">内部处理流程</div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot processing"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 1: 信息汇总 & 去重</div>
+            <div class="step-desc">合并三个 Agent 的输出，去除重复内容，统一术语</div>
+            <div class="step-details">
+              <span class="highlight">规则处理</span><br>
+              · 语义模型中的度量名称 ↔ 看板图表中引用的指标名称 → 统一<br>
+              · 维度在多处出现 → 以语义模型定义为准<br>
+              · 口径说明 → 只在语义模型指南中出现一次，看板指南中引用
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot processing"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 2: 生成文档 A — 语义模型搭建指南</div>
+            <div class="step-desc">组织语义模型相关内容为独立文档</div>
+            <div class="step-details">
+              文档结构：<br>
+              1. 模型基本信息（名称、数据源、基础过滤）<br>
+              2. <span class="highlight">语义模型 SQL</span>（多表 JOIN + WHERE）<br>
+              3. 维度识别表 + 调整建议<br>
+              4. 度量识别表 + 调整建议<br>
+              5. 自定义指标（含完整 CASE WHEN 表达式）<br>
+              6. 注意事项（性能、拆分建议）
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 3: 生成文档 B — 看板搭建指南</div>
+            <div class="step-desc">组织看板相关内容为独立文档</div>
+            <div class="step-details">
+              文档结构：<br>
+              1. 看板概览（名称、刷新频率、使用的语义模型）<br>
+              2. <span class="highlight">布局图</span>（ASCII 或文字描述）<br>
+              3. 全局筛选器配置<br>
+              4. 各图表详细配置：<br>
+              &nbsp;&nbsp;· 图表类型 & 使用的语义模型<br>
+              &nbsp;&nbsp;· 维度 & 度量<br>
+              &nbsp;&nbsp;· 图表级 SQL<br>
+              &nbsp;&nbsp;· 样式 & 交互配置<br>
+              &nbsp;&nbsp;· 联动规则<br>
+              5. 注意事项
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 4: 质量自检</div>
+            <div class="step-desc">在输出前进行一致性校验</div>
+            <div class="step-details">
+              <span class="highlight">校验规则</span><br>
+              · 看板指南中引用的每个度量是否在语义模型指南中有定义<br>
+              · 看板指南中引用的每个维度是否在语义模型 SQL 的 SELECT 中存在<br>
+              · SQL 语法是否正确（字段名、表名与输入一致）<br>
+              · 图表选型是否与数据特征匹配<br>
+              · 是否有遗漏的指标或筛选需求
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-line">
+            <div class="step-dot"></div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Step 5: 确认项汇总 → 人工交接</div>
+            <div class="step-desc">合并所有 Agent 标记的待确认项，在方案文档末尾输出，交由人工审核</div>
+            <div class="decision-box">
+              <span class="diamond">◆</span>
+              <span class="text">确认项是否全部通过？</span>
+              <div class="branch">
+                <span class="branch-yes" style="background: rgba(63, 185, 80, 0.15); color: #3fb950; border: 1px solid rgba(63, 185, 80, 0.3);">✓ 通过 → 执行搭建</span>
+                <span class="branch-no" style="background: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.3);">✗ 需修正 → 反馈调整</span>
+              </div>
+            </div>
+            <div class="step-details">
+              <span class="highlight">人机协作交接点</span><br><br>
+              <strong>确认项来源</strong>：各 Agent 在推理过程中标记的无法自主决策的点<br><br>
+              <strong>确认项分类</strong>：<br>
+              · <span style="color: #f85149;">🔴 口径确认</span> — 业务定义类（如"GMV是否含退款"）<br>
+              · <span style="color: #d29922;">🟡 数据可行性</span> — 表结构/字段是否存在（一期无元数据服务，需人工验证）<br>
+              · <span style="color: #58a6ff;">🔵 过滤条件</span> — 业务规则类（如"是否排除测试订单"）<br><br>
+              <strong>处理方式</strong>：<br>
+              · 一期：确认项写入方案文档末尾，人工逐项审核，反馈后重新生成<br>
+              · 二期：接入元数据服务后，数据可行性类可自动校验，确认项大幅减少<br>
+              · 三期：BI平台API打通，方案直接落库，人工仅需最终审核
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
