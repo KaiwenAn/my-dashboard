@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>看板搭建方案</title>
+<style>
+
+:root {
+  --color-red: #f85149;
+  --color-red-rgb: 248, 81, 73;
+  --color-orange: #d29922;
+  --color-orange-rgb: 210, 153, 34;
+  --color-yellow: #e3b341;
+  --color-yellow-rgb: 227, 179, 65;
+  --color-blue: #58a6ff;
+  --color-blue-rgb: 88, 166, 255;
+  --color-teal: #3fb950;
+  --color-teal-rgb: 63, 185, 80;
+  --color-gray: #8b949e;
+  --color-gray-rgb: 139, 148, 158;
+
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #1c2333;
+  --bg-card: #21262d;
+  --border-default: #30363d;
+  --border-muted: #21262d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* Layout */
+.report-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-default);
+  padding: 24px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border-default);
+}
+.sidebar-logo {
+  display: inline-block;
+  background: linear-gradient(135deg, #58a6ff, #3fb950);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.sidebar-nav {
+  padding: 16px 12px;
+  flex: 1;
+}
+.nav-item {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  margin-bottom: 4px;
+  transition: all 0.2s;
+}
+.nav-item:hover {
+  background: rgba(88, 166, 255, 0.08);
+  color: var(--text-primary);
+}
+.nav-item.active {
+  background: rgba(88, 166, 255, 0.12);
+  color: #58a6ff;
+}
+.nav-warn {
+  position: relative;
+}
+.nav-warn::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-orange);
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-default);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.sidebar-footer-sub {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.main-content {
+  margin-left: 220px;
+  flex: 1;
+  padding: 40px 48px;
+  max-width: 1100px;
+}
+
+/* Header */
+.report-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border-default);
+}
+.report-badge {
+  display: inline-block;
+  background: rgba(63, 185, 80, 0.1);
+  color: var(--color-teal);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(63, 185, 80, 0.2);
+}
+.report-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.report-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* TOC */
+.report-toc {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 40px;
+}
+.toc-title {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.toc-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.toc-links a {
+  color: #58a6ff;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(88, 166, 255, 0.06);
+  border: 1px solid rgba(88, 166, 255, 0.15);
+  transition: all 0.2s;
+}
+.toc-links a:hover {
+  background: rgba(88, 166, 255, 0.15);
+}
+
+/* Sections */
+.report-section {
+  margin-bottom: 48px;
+}
+.section-heading {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.heading-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(88, 166, 255, 0.12);
+  color: #58a6ff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Info cards */
+.info-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.info-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.info-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.info-value {
+  font-size: 15px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Question list */
+.question-list {
+  list-style: none;
+  padding: 0;
+}
+.question-list li {
+  padding: 8px 0 8px 20px;
+  position: relative;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.question-list li::before {
+  content: '?';
+  position: absolute;
+  left: 0;
+  color: #58a6ff;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Tags */
+.tag-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.data-source-tag {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(88, 166, 255, 0.08);
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  color: #79c0ff;
+  font-size: 13px;
+}
+
+/* Tables */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border-default);
+}
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.styled-table th {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+.styled-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-muted);
+  color: var(--text-primary);
+  vertical-align: top;
+}
+.styled-table tbody tr:hover {
+  background: rgba(88, 166, 255, 0.04);
+}
+.styled-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.code-cell {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: #d2a8ff;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Type/Status badges */
+.type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(88, 166, 255, 0.1);
+  color: #79c0ff;
+}
+.type-badge:contains("复合") {
+  background: rgba(210, 153, 34, 0.1);
+  color: #e3b341;
+}
+.status-ok {
+  color: var(--color-teal) !important;
+}
+.status-warn {
+  color: var(--color-orange) !important;
+}
+.status-badge {
+  font-weight: 600;
+}
+
+/* Subsections */
+.section-block {
+  margin-bottom: 24px;
+}
+.section-block h3, .subsection h3, .subsection h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+/* Model card */
+.model-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.model-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-default);
+}
+.model-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: rgba(63, 185, 80, 0.1);
+  flex-shrink: 0;
+}
+.model-header h3 {
+  font-size: 16px;
+  color: #fff;
+  font-weight: 700;
+}
+.model-purpose {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.model-sql-area {
+  padding: 20px 24px;
+}
+
+/* SQL block */
+.sql-block {
+  margin-bottom: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default);
+  overflow: hidden;
+}
+.sql-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-default);
+}
+.sql-icon {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.copy-btn {
+  background: none;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.copy-btn:hover {
+  background: rgba(88, 166, 255, 0.1);
+  color: #58a6ff;
+  border-color: rgba(88, 166, 255, 0.3);
+}
+.sql-code {
+  background: var(--bg-primary);
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #c9d1d9;
+  margin: 0;
+}
+.sql-kw { color: #ff7b72; font-weight: 600; }
+.sql-field { color: #d2a8ff; }
+.sql-notes {
+  background: rgba(88, 166, 255, 0.06);
+  border: 1px solid rgba(88, 166, 255, 0.12);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+.sql-notes strong {
+  color: var(--text-primary);
+}
+
+/* Filter section */
+.filter-level-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.level-sql {
+  background: rgba(255, 123, 114, 0.1);
+  color: #ff7b72;
+}
+.level-chart {
+  background: rgba(88, 166, 255, 0.1);
+  color: #58a6ff;
+}
+.level-metric {
+  background: rgba(210, 153, 34, 0.1);
+  color: #d29922;
+}
+.filter-list-text {
+  list-style: none;
+  padding: 0;
+}
+.filter-list-text li {
+  padding: 6px 0 6px 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-muted);
+}
+.filter-list-text li:last-child {
+  border-bottom: none;
+}
+
+/* Quality list */
+.quality-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.quality-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+.quality-type {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+.quality-detail {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.quality-detail p {
+  margin-bottom: 4px;
+}
+.quality-suggest {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Layout preview */
+.layout-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.layout-preview {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.layout-grid-label {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  padding-top: 4px;
+}
+.layout-cell {
+  border: 2px dashed;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+  transition: all 0.2s;
+  min-height: 0;
+}
+.layout-cell:hover {
+  transform: scale(1.02);
+  z-index: 1;
+}
+.layout-cell-icon {
+  font-size: 20px;
+}
+.layout-cell-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.layout-cell-type {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.layout-cell-size {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* Chart cards */
+.chart-cards-grid {
+  display: grid;
+  gap: 16px;
+}
+.chart-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.chart-card:hover {
+  border-color: rgba(63, 185, 80, 0.3);
+}
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-default);
+}
+.chart-type-badge {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.chart-card-header h4 {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 600;
+}
+.chart-card-body {
+  padding: 16px 18px;
+}
+.chart-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.chart-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.meta-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.meta-value {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.meta-value.code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: #d2a8ff;
+}
+.chart-interaction {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.interaction-tag {
+  background: rgba(63, 185, 80, 0.1);
+  color: var(--color-teal);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 11px;
+}
+.chart-design-notes {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+}
+
+/* Global filters */
+.filter-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.filter-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+}
+.filter-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.filter-type {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Confirm section */
+.confirm-section {
+  background: rgba(248, 81, 73, 0.02);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(248, 81, 73, 0.1);
+}
+.confirm-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 14px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+.stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-orange);
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.confirm-tip {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: rgba(210, 153, 34, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid var(--color-orange);
+}
+.confirm-cards-grid {
+  display: grid;
+  gap: 12px;
+}
+.confirm-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-left: 4px solid;
+  border-radius: 0 10px 10px 0;
+  padding: 16px 18px;
+  transition: all 0.2s;
+}
+.confirm-card:hover {
+  transform: translateX(4px);
+}
+.confirm-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.confirm-index {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.confirm-category {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+.confirm-content {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.confirm-risk {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.confirm-suggest {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  background: rgba(63, 185, 80, 0.06);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.confirm-suggest strong {
+  color: var(--color-teal);
+}
+.confirm-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 0;
+}
+.confirm-check input[type="checkbox"] {
+  accent-color: var(--color-teal);
+}
+
+/* Steps timeline */
+.steps-timeline {
+  position: relative;
+  padding-left: 40px;
+}
+.steps-timeline::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-default);
+}
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  position: relative;
+}
+.step-item:last-child {
+  margin-bottom: 0;
+}
+.step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(88, 166, 255, 0.12);
+  color: #58a6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+  position: absolute;
+  left: -40px;
+}
+.step-content {
+  flex: 1;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+.step-content strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.step-content p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Footer */
+.report-footer {
+  text-align: center;
+  padding: 32px 0;
+  border-top: 1px solid var(--border-default);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main-content { margin-left: 0; padding: 24px 16px; }
+  .confirm-stats { flex-wrap: wrap; }
+  .info-cards-grid { grid-template-columns: 1fr; }
+}
+
+</style>
+</head>
+<body>
+<div class="report-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">Agent</div>
+      <div class="sidebar-title">看板搭建</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#sec-overview" class="nav-item active">看板概述</a>
+      <a href="#sec-semantic" class="nav-item">语义模型</a>
+      <a href="#sec-layout" class="nav-item">布局方案</a>
+      <a href="#sec-confirm" class="nav-item nav-warn">待确认项</a>
+      <a href="#sec-steps" class="nav-item">搭建步骤</a>
+    </nav>
+    <div class="sidebar-footer">
+      <p>人机协作</p>
+      <p class="sidebar-footer-sub">Agent 生成 · 人工审核</p>
+    </div>
+  </aside>
+  <main class="main-content">
+    
+<div class="report-header">
+  <div class="report-badge">Agent 自动生成</div>
+  <h1 class="report-title">僵尸事件看板</h1>
+  <p class="report-subtitle">BI 看板搭建方案 · 2026-04-29 15:56</p>
+</div>
+
+<div class="report-toc">
+  <h2 class="toc-title">目录</h2>
+  <nav class="toc-links">
+    <a href="#sec-overview">一、看板概述</a>
+    <a href="#sec-semantic">二、语义模型搭建指南</a>
+    <a href="#sec-layout">三、看板布局方案</a>
+    <a href="#sec-confirm">四、待确认项清单</a>
+    <a href="#sec-steps">五、搭建步骤建议</a>
+  </nav>
+</div>
+
+
+<section id="sec-overview" class="report-section">
+  <h2 class="section-heading"><span class="heading-num">一</span> 看板概述</h2>
+  <div class="info-cards-grid">
+            <div class="info-card">
+              <div class="info-label">看板名称</div>
+              <div class="info-value">手机部可优化事件成本看板</div>
+            </div>
+            <div class="info-card">
+              <div class="info-label">目标受众</div>
+              <div class="info-value">手机部成本优化负责人、各App负责人、部门管理者</div>
+            </div>
+            <div class="info-card">
+              <div class="info-label">看板目标</div>
+              <div class="info-value">监控手机部可优化事件的成本趋势，识别高成本事件和App，按部门/地域/优化类型等多维度下钻分析，为成本优化决策提供数据支撑</div>
+            </div></div>
+  
+  
+  
+        <div class="section-block">
+          <h3>指标一览</h3>
+          <div class="table-wrapper">
+            <table class="styled-table metrics-table">
+              <thead>
+                <tr>
+                  <th>指标名称</th>
+                  <th>类型</th>
+                  <th>口径定义</th>
+                  <th>单位</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+        <tr>
+          <td><strong>charge_track</strong></td>
+          <td><span class="type-badge">原子指标</span></td>
+          <td>事件采集成本，直接从主表SUM聚合</td>
+          <td>元</td>
+          <td><span class="status-badge status-ok">✅已确认</span></td>
+        </tr>
+        <tr>
+          <td><strong>charge_use</strong></td>
+          <td><span class="type-badge">原子指标</span></td>
+          <td>事件使用成本，直接从主表SUM聚合</td>
+          <td>元</td>
+          <td><span class="status-badge status-ok">✅已确认</span></td>
+        </tr>
+        <tr>
+          <td><strong>可优化成本（optimize_cost）</strong></td>
+          <td><span class="type-badge">衍生指标</span></td>
+          <td>仅对与dwm_bill_optimize_event_v2_df关联成功（event_guid和date均匹配）的事件行，求和charge_track+charge_use</td>
+          <td>元</td>
+          <td><span class="status-badge status-warn">⚠️待确认</span></td>
+        </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+</section>
+
+
+<section id="sec-semantic" class="report-section">
+  <h2 class="section-heading"><span class="heading-num">二</span> 语义模型搭建指南</h2>
+  
+<div class="model-card">
+  <div class="model-header">
+    <div class="model-icon">🏗️</div>
+    <div class="model-info">
+      <h3>模型：dm_optimize_event_cost_daily</h3>
+      <p class="model-purpose">日粒度可优化事件成本分析模型，聚合所有维度与指标，支持按App、事件、地域、部门等多维度下钻分析</p>
+    </div>
+  </div>
+
+  
+        <div class="model-sql-area">
+          
+            <div class="sql-block">
+              <div class="sql-header">
+                <span class="sql-icon">{} SQL</span>
+                <button class="copy-btn" onclick="copySql('sql_0')">复制</button>
+              </div>
+              <pre class="sql-code" id="sql_0"><code>-- 手机部可优化事件成本日报语义模型
+-- 覆盖指标：可优化成本、charge_track、charge_use
+-- 数据粒度：事件行（日维度通过主表date字段聚合）
+-- 核心逻辑：仅对与dwm_bill_optimize_event_v2_df关联成功的事件行计算可优化成本
+
+WITH
+-- Step 1: 维度表预处理：dwm_bill_event_onetrack_charge_share_di 作为维度表使用时，按 app_id, date 去重
+-- 避免因粒度不一致导致主表数据膨胀
+onetrack_dept_dedup <span class="sql-kw">AS</span> (
+    <span class="sql-kw">SELECT</span> <span class="sql-kw">DISTINCT</span>
+        app_id,
+        date,
+        bu_dept1_name,
+        bu_dept2_name
+    <span class="sql-kw">FROM</span> iceberg_zjyprc_hadoop.meta.dwm_bill_event_onetrack_charge_share_di
+    <span class="sql-kw">WHERE</span> 1=1
+        -- 模型级过滤：日期同步到该表
+        <span class="sql-kw">AND</span> date = &#x27;${date-1}&#x27;
+),
+
+-- Step 2: 可优化事件表预处理：dwm_bill_optimize_event_v2_df 也需同步日期过滤
+optimize_events <span class="sql-kw">AS</span> (
+    <span class="sql-kw">SELECT</span>
+        event_guid,
+        date,
+        opt_flg
+    <span class="sql-kw">FROM</span> iceberg_zjyprc_hadoop.meta.dwm_bill_optimize_event_v2_df
+    <span class="sql-kw">WHERE</span> 1=1
+        -- 模型级过滤：日期同步到该表
+        <span class="sql-kw">AND</span> date = &#x27;${date-1}&#x27;
+)
+
+<span class="sql-kw">SELECT</span>
+    -- ===== 维度字段 =====
+    -- 日期维度（来自主表）
+    e.date <span class="sql-kw">AS</span> date,
+
+    -- app_id（来自主表）
+    e.app_id <span class="sql-kw">AS</span> app_id,
+
+    -- app_name（来自track_app_info.name字段）
+    -- ⚠️ TODO: 需确认 - 上游key_fields中未找到&#x27;app_name&#x27;字段，此处使用name字段
+    app_info.name <span class="sql-kw">AS</span> app_name,
+
+    -- app_owner（来自track_app_info.owner字段）
+    -- ⚠️ TODO: 需确认 - 上游key_fields中未找到&#x27;app_owner&#x27;字段，此处使用owner字段
+    app_info.owner <span class="sql-kw">AS</span> app_owner,
+
+    -- region（来自主表）
+    e.region <span class="sql-kw">AS</span> region,
+
+    -- event_name（来自主表event_name字段）
+    e.event_name <span class="sql-kw">AS</span> event_name,
+
+    -- event_name_cn（来自track_event_info.display_name字段）
+    -- ⚠️ TODO: 需确认 - 上游key_fields中未找到&#x27;event_name_cn&#x27;字段，此处使用display_name字段
+    event_info.display_name <span class="sql-kw">AS</span> event_name_cn,
+
+    -- event_guid（来自主表）
+    e.event_guid <span class="sql-kw">AS</span> event_guid,
+
+    -- opt_flg（来自dwm_bill_optimize_event_v2_df）
+    opt.opt_flg <span class="sql-kw">AS</span> opt_flg,
+
+    -- bu_dept1_name（来自去重后的onetrack部门维度表）
+    dept.bu_dept1_name <span class="sql-kw">AS</span> bu_dept1_name,
+
+    -- bu_dept2_name（来自去重后的onetrack部门维度表）
+    dept.bu_dept2_name <span class="sql-kw">AS</span> bu_dept2_name,
+
+    -- ===== 原子指标 =====
+    -- charge_track: 事件采集成本
+    <span class="sql-kw">SUM</span>(e.charge_track) <span class="sql-kw">AS</span> charge_track,
+
+    -- charge_use: 事件使用成本
+    <span class="sql-kw">SUM</span>(e.charge_use) <span class="sql-kw">AS</span> charge_use,
+
+    -- ===== 衍生指标 =====
+    -- 可优化成本: 仅对与dwm_bill_optimize_event_v2_df关联成功的事件行求和
+    -- 关联成功条件：event_guid匹配且date匹配（通过LEFT JOIN + <span class="sql-kw">IS</span> <span class="sql-kw">NOT</span> NULL判断）
+    -- 注意：dwm_bill_optimize_event_v2_df表中所有事件均为可优化事件，无需用opt_flg过滤
+    <span class="sql-kw">SUM</span>(<span class="sql-kw">CASE</span> <span class="sql-kw">WHEN</span> opt.event_guid <span class="sql-kw">IS</span> <span class="sql-kw">NOT</span> <span class="sql-kw">NULL</span> <span class="sql-kw">THEN</span> e.charge_track + e.charge_use <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>) <span class="sql-kw">AS</span> optimize_cost
+
+<span class="sql-kw">FROM</span> iceberg_zjyprc_hadoop.meta.dm_bill_event_charge_without_visit_v2_df e
+
+-- <span class="sql-kw">LEFT JOIN</span> track_app_info: 获取app名称和负责人
+-- 关联条件：e.app_id = app_info.real_app_id（使用field_mappings中的实际字段名real_app_id）
+<span class="sql-kw">LEFT JOIN</span> iceberg_zjyprc_hadoop.tracking.track_app_info app_info
+    <span class="sql-kw">ON</span> e.app_id = app_info.real_app_id
+
+-- <span class="sql-kw">LEFT JOIN</span> track_event_info: 获取事件中文名
+-- 关联条件：e.event_name = event_info.name（使用field_mappings中的实际字段名name）
+-- 注意：track_event_info的is_delete过滤条件仅应用于该表，不影响主表行数
+<span class="sql-kw">LEFT JOIN</span> iceberg_zjyprc_hadoop.tracking.track_event_info event_info
+    <span class="sql-kw">ON</span> e.event_name = event_info.name
+    <span class="sql-kw">AND</span> event_info.is_delete = &#x27;0&#x27;
+
+-- <span class="sql-kw">LEFT JOIN</span> dwm_bill_optimize_event_v2_df: 标识可优化事件
+-- 关联条件：event_guid和date双字段匹配
+-- 此表所有事件均为可优化事件，无需用opt_flg过滤
+<span class="sql-kw">LEFT JOIN</span> optimize_events opt
+    <span class="sql-kw">ON</span> e.event_guid = opt.event_guid
+    <span class="sql-kw">AND</span> e.date = opt.date
+
+-- <span class="sql-kw">LEFT JOIN</span> 去重后的onetrack部门维度表: 获取部门归属
+-- 关联条件：app_id和date双字段匹配
+-- 此表作为维度表使用，已按app_id,date去重
+<span class="sql-kw">LEFT JOIN</span> onetrack_dept_dedup dept
+    <span class="sql-kw">ON</span> e.app_id = dept.app_id
+    <span class="sql-kw">AND</span> e.date = dept.date
+
+<span class="sql-kw">WHERE</span> 1=1
+    -- 模型级过滤：日期过滤，同步应用到所有包含date字段的表
+    -- 主表日期过滤
+    <span class="sql-kw">AND</span> e.date = &#x27;${date-1}&#x27;
+    -- 模型级过滤：部门过滤，仅展示手机部数据
+    <span class="sql-kw">AND</span> dept.bu_dept1_name = &#x27;手机部&#x27;
+    -- 模型级过滤：排除app_id为NULL的数据
+    <span class="sql-kw">AND</span> e.app_id <span class="sql-kw">IS</span> <span class="sql-kw">NOT</span> <span class="sql-kw">NULL</span>
+
+<span class="sql-kw">GROUP BY</span>
+    e.date,
+    e.app_id,
+    app_info.name,
+    app_info.owner,
+    e.region,
+    e.event_name,
+    event_info.display_name,
+    e.event_guid,
+    opt.opt_flg,
+    dept.bu_dept1_name,
+    dept.bu_dept2_name</code></pre>
+            </div>
+          <div class="sql-notes"><strong>💡 SQL 说明</strong>：
+&gt;
+&gt; 1. <strong>CTE预处理</strong>：
+&gt;    - <code>onetrack_dept_dedup</code>：将dwm_bill_event_onetrack_charge_share_di按app_id,date去重，避免多对多JOIN导致主表数据膨胀。同时在此CTE中应用日期过滤（date = &#x27;${date-1}&#x27;）
+&gt;    - <code>optimize_events</code>：将dwm_bill_optimize_event_v2_df预过滤日期，减少JOIN数据量
+&gt;
+&gt; 2. <strong>主表与维度表关联</strong>：
+&gt;    - 主表 <code>dm_bill_event_charge_without_visit_v2_df</code> 作为事实表，LEFT JOIN所有维度表
+&gt;    - track_app_info：通过 <code>e.app_id = app_info.real_app_id</code> 关联（使用field_mappings中的实际字段名real_app_id）
+&gt;    - track_event_info：通过 <code>e.event_name = event_info.name</code> 关联（使用field_mappings中的实际字段名name），并应用is_delete=&#x27;0&#x27;过滤
+&gt;    - dwm_bill_optimize_event_v2_df：通过 <code>e.event_guid = opt.event_guid AND e.date = opt.date</code> 双字段关联
+&gt;    - dwm_bill_event_onetrack_charge_share_di：通过 <code>e.app_id = dept.app_id AND e.date = dept.date</code> 双字段关联（使用去重后的CTE）
+&gt;
+&gt; 3. <strong>指标计算</strong>：
+&gt;    - charge_track/charge_use：直接SUM聚合
+&gt;    - 可优化成本：使用CASE WHEN判断opt.event_guid IS NOT NULL（即与可优化事件表关联成功），对关联成功的事件行求和charge_track+charge_use
+&gt;
+&gt; 4. <strong>WHERE过滤</strong>：
+&gt;    - 日期过滤：同步应用到主表（e.date）和onetrack部门维度表（已在CTE中应用）
+&gt;    - 部门过滤：dept.bu_dept1_name = &#x27;手机部&#x27;
+&gt;    - app_id非空过滤：e.app_id IS NOT NULL
+&gt;    - track_event_info的is_delete过滤：在LEFT JOIN的ON条件中应用，不影响主表行数</div>
+        </div>
+  
+    <div class="subsection">
+      <h4>维度配置</h4>
+      <div class="table-wrapper">
+        <table class="styled-table">
+          <thead><tr><th>字段名</th><th>来源表</th><th>数据类型</th><th>语义类型</th><th>配置说明</th></tr></thead>
+          <tbody><tr><td class="code-cell">date</td><td class=""><span class="sql-field">`dm_bill_event_charge_without_visit_v2_df`</span></td><td class=""><span class="sql-kw">DATE</span></td><td class="">日期</td><td class="">BI平台自动识别为时间维度，配置为默认按日聚合</td></tr><tr><td class="code-cell">app_id</td><td class=""><span class="sql-field">`dm_bill_event_charge_without_visit_v2_df`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，BI平台自动解析去重值</td></tr><tr><td class="code-cell">app_name</td><td class=""><span class="sql-field">`track_app_info`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，支持筛选器。⚠️ 当前使用name字段，需确认</td></tr><tr><td class="code-cell">app_owner</td><td class=""><span class="sql-field">`track_app_info`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，支持筛选器。⚠️ 当前使用owner字段，需确认</td></tr><tr><td class="code-cell">region</td><td class=""><span class="sql-field">`dm_bill_event_charge_without_visit_v2_df`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，支持筛选器</td></tr><tr><td class="code-cell">event_name</td><td class=""><span class="sql-field">`dm_bill_event_charge_without_visit_v2_df`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，支持筛选器</td></tr><tr><td class="code-cell">event_name_cn</td><td class=""><span class="sql-field">`track_event_info`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，支持筛选器。⚠️ 当前使用display_name字段，需确认</td></tr><tr><td class="code-cell">event_guid</td><td class=""><span class="sql-field">`dm_bill_event_charge_without_visit_v2_df`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，用于明细表展示</td></tr><tr><td class="code-cell">opt_flg</td><td class=""><span class="sql-field">`dwm_bill_optimize_event_v2_df`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，支持筛选器。LEFT JOIN可能产生NULL值（非可优化事件）</td></tr><tr><td class="code-cell">bu_dept1_name</td><td class=""><span class="sql-field">`dwm_bill_event_onetrack_charge_share_di`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，支持筛选器。来自去重后的onetrack部门维度表</td></tr><tr><td class="code-cell">bu_dept2_name</td><td class=""><span class="sql-field">`dwm_bill_event_onetrack_charge_share_di`</span></td><td class="">STRING</td><td class="">类别</td><td class="">配置为类别维度，支持筛选器。来自去重后的onetrack部门维度表</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  
+    <div class="subsection">
+      <h4>指标配置</h4>
+      <div class="table-wrapper">
+        <table class="styled-table">
+          <thead><tr><th>字段名</th><th>聚合方式</th><th>SQL 表达式</th><th>依赖指标</th><th>单位</th><th>状态</th></tr></thead>
+          <tbody><tr><td class="code-cell">charge_track</td><td class=""><span class="sql-kw">SUM</span></td><td class="code-cell"><span class="sql-field">`<span class="sql-kw">SUM</span>(e.charge_track)`</span></td><td class="">无</td><td class="">元</td><td class="">✅已确认</td></tr><tr><td class="code-cell">charge_use</td><td class=""><span class="sql-kw">SUM</span></td><td class="code-cell"><span class="sql-field">`<span class="sql-kw">SUM</span>(e.charge_use)`</span></td><td class="">无</td><td class="">元</td><td class="">✅已确认</td></tr><tr><td class="code-cell">optimize_cost</td><td class=""><span class="sql-kw">SUM</span></td><td class="code-cell"><span class="sql-field">`<span class="sql-kw">SUM</span>(<span class="sql-kw">CASE</span> <span class="sql-kw">WHEN</span> opt.event_guid <span class="sql-kw">IS</span> <span class="sql-kw">NOT</span> <span class="sql-kw">NULL</span> <span class="sql-kw">THEN</span> e.charge_track + e.charge_use <span class="sql-kw">ELSE</span> 0 <span class="sql-kw">END</span>)`</span></td><td class="">charge_track, charge_use</td><td class="">元</td><td class="">⚠️待确认</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  
+    <div class="subsection">
+      <h4>关联逻辑</h4>
+      <div class="table-wrapper">
+        <table class="styled-table">
+          <thead><tr><th>左表</th><th>关联方式</th><th>右表</th><th>关联条件</th><th>原因</th></tr></thead>
+          <tbody><tr><td class=""><span class="sql-field">`dm_bill_event_charge_without_visit_v2_df`</span></td><td class=""><span class="sql-kw">LEFT JOIN</span></td><td class=""><span class="sql-field">`track_app_info`</span></td><td class=""><span class="sql-field">`e.app_id = app_info.real_app_id`</span></td><td class="">获取app名称和负责人信息。使用field_mappings中的实际字段名real_app_id。LEFT JOIN保证主表数据不丢失</td></tr><tr><td class=""><span class="sql-field">`dm_bill_event_charge_without_visit_v2_df`</span></td><td class=""><span class="sql-kw">LEFT JOIN</span></td><td class=""><span class="sql-field">`track_event_info`</span></td><td class=""><span class="sql-field">`e.event_name = event_info.name <span class="sql-kw">AND</span> event_info.is_delete = &amp;#x27;0&amp;#x27;`</span></td><td class="">获取事件中文名。使用field_mappings中的实际字段名name。is_delete=&amp;#x27;0&amp;#x27;过滤条件放在ON中，不影响主表行数，仅过滤维度表数据</td></tr><tr><td class=""><span class="sql-field">`dm_bill_event_charge_without_visit_v2_df`</span></td><td class=""><span class="sql-kw">LEFT JOIN</span></td><td class=""><span class="sql-field">`dwm_bill_optimize_event_v2_df`</span></td><td class=""><span class="sql-field">`e.event_guid = opt.event_guid <span class="sql-kw">AND</span> e.date = opt.date`</span></td><td class="">通过event_guid和date双字段关联，标识可优化事件。LEFT JOIN保证主表所有事件行保留，关联成功的事件行用于计算可优化成本</td></tr><tr><td class=""><span class="sql-field">`dm_bill_event_charge_without_visit_v2_df`</span></td><td class=""><span class="sql-kw">LEFT JOIN</span></td><td class=""><span class="sql-field">`dwm_bill_event_onetrack_charge_share_di`</span></td><td class=""><span class="sql-field">`e.app_id = dept.app_id <span class="sql-kw">AND</span> e.date = dept.date`</span></td><td class="">获取部门归属信息。此表作为维度表使用，已通过CTE按app_id,date去重。LEFT JOIN保证主表数据不丢失</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  
+  
+</div>
+</section>
+
+
+<section id="sec-layout" class="report-section">
+  <h2 class="section-heading"><span class="heading-num">三</span> 看板布局方案</h2>
+
+  <div class="subsection">
+    <h3>布局预览</h3>
+    <div class="layout-description">布局从上到下：第1行3个KPI指标卡片（各占4列），第2行成本趋势折线图（占满12列），第3行App排名+事件排名（各占6列，左右并列），第4行优化类型分布+地区分布（各占6列，左右并列），第5行部门成本分布（占满12列），第6行明细表格（占满12列）。视线从KPI→趋势→App/事件下钻→优化类型/地区下钻→部门下钻→明细，符合总览到细节的信息流。所有下钻图表支持通过日期筛选器和图表联动进行交互过滤。</div>
+    
+    <div class="layout-preview" style="grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(6, 100px);">
+      <div class="layout-grid-label">12 列网格布局</div>
+      
+        <div class="layout-cell" style="
+            grid-column: 1 / span 4;
+            grid-row: 1 / span 1;
+            border-color: #94a3b8;
+            background: #94a3b811;
+        ">
+          <div class="layout-cell-icon">📊</div>
+          <div class="layout-cell-name">总可优化成本</div>
+          <div class="layout-cell-type">指标趋势图</div>
+          <div class="layout-cell-size">4x1</div>
+        </div>
+        <div class="layout-cell" style="
+            grid-column: 5 / span 4;
+            grid-row: 1 / span 1;
+            border-color: #94a3b8;
+            background: #94a3b811;
+        ">
+          <div class="layout-cell-icon">📊</div>
+          <div class="layout-cell-name">总采集成本</div>
+          <div class="layout-cell-type">指标趋势图</div>
+          <div class="layout-cell-size">4x1</div>
+        </div>
+        <div class="layout-cell" style="
+            grid-column: 9 / span 4;
+            grid-row: 1 / span 1;
+            border-color: #94a3b8;
+            background: #94a3b811;
+        ">
+          <div class="layout-cell-icon">📊</div>
+          <div class="layout-cell-name">总使用成本</div>
+          <div class="layout-cell-type">指标趋势图</div>
+          <div class="layout-cell-size">4x1</div>
+        </div>
+        <div class="layout-cell" style="
+            grid-column: 1 / span 12;
+            grid-row: 2 / span 1;
+            border-color: #34d399;
+            background: #34d39911;
+        ">
+          <div class="layout-cell-icon">📈</div>
+          <div class="layout-cell-name">可优化成本日趋势</div>
+          <div class="layout-cell-type">折线图</div>
+          <div class="layout-cell-size">12x1</div>
+        </div>
+        <div class="layout-cell" style="
+            grid-column: 1 / span 6;
+            grid-row: 3 / span 1;
+            border-color: #38bdf8;
+            background: #38bdf811;
+        ">
+          <div class="layout-cell-icon">📊</div>
+          <div class="layout-cell-name">各App可优化成本排名</div>
+          <div class="layout-cell-type">条形图</div>
+          <div class="layout-cell-size">6x1</div>
+        </div>
+        <div class="layout-cell" style="
+            grid-column: 7 / span 6;
+            grid-row: 3 / span 1;
+            border-color: #38bdf8;
+            background: #38bdf811;
+        ">
+          <div class="layout-cell-icon">📊</div>
+          <div class="layout-cell-name">各事件可优化成本排名</div>
+          <div class="layout-cell-type">条形图</div>
+          <div class="layout-cell-size">6x1</div>
+        </div>
+        <div class="layout-cell" style="
+            grid-column: 1 / span 6;
+            grid-row: 4 / span 1;
+            border-color: #94a3b8;
+            background: #94a3b811;
+        ">
+          <div class="layout-cell-icon">📊</div>
+          <div class="layout-cell-name">优化类型成本分布</div>
+          <div class="layout-cell-type">堆叠柱状图</div>
+          <div class="layout-cell-size">6x1</div>
+        </div>
+        <div class="layout-cell" style="
+            grid-column: 7 / span 6;
+            grid-row: 4 / span 1;
+            border-color: #60a5fa;
+            background: #60a5fa11;
+        ">
+          <div class="layout-cell-icon">📊</div>
+          <div class="layout-cell-name">各地区可优化成本分布</div>
+          <div class="layout-cell-type">柱状图</div>
+          <div class="layout-cell-size">6x1</div>
+        </div>
+        <div class="layout-cell" style="
+            grid-column: 1 / span 12;
+            grid-row: 5 / span 1;
+            border-color: #94a3b8;
+            background: #94a3b811;
+        ">
+          <div class="layout-cell-icon">📊</div>
+          <div class="layout-cell-name">部门成本分布</div>
+          <div class="layout-cell-type">堆叠柱状图</div>
+          <div class="layout-cell-size">12x1</div>
+        </div>
+        <div class="layout-cell" style="
+            grid-column: 1 / span 12;
+            grid-row: 6 / span 1;
+            border-color: #94a3b8;
+            background: #94a3b811;
+        ">
+          <div class="layout-cell-icon">📋</div>
+          <div class="layout-cell-name">可优化事件明细</div>
+          <div class="layout-cell-type">数据表格</div>
+          <div class="layout-cell-size">12x1</div>
+        </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3>图表配置明细</h3>
+    <div class="chart-cards-grid">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📊 指标趋势图</span>
+            <h4>chart_01：总可优化成本</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">date（x轴）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">optimize_cost（主值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第1行 第1列，占1行4列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 点击日期可联动chart_04、chart_05、chart_06、chart_07（联动维度：date）</div>
+            <div class='chart-design-notes'>核心KPI指标，放在左上第一位，附带日趋势迷你线，点击日期可联动下钻图表</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📊 指标趋势图</span>
+            <h4>chart_02：总采集成本</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">date（x轴）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">charge_track（主值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第1行 第5列，占1行4列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 点击日期可联动chart_04、chart_05、chart_06、chart_07（联动维度：date）</div>
+            <div class='chart-design-notes'>采集成本KPI，与总可优化成本并列展示，方便对比</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📊 指标趋势图</span>
+            <h4>chart_03：总使用成本</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">date（x轴）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">charge_use（主值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第1行 第9列，占1行4列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 点击日期可联动chart_04、chart_05、chart_06、chart_07（联动维度：date）</div>
+            <div class='chart-design-notes'>使用成本KPI，与采集成本并列，用户可直观对比两种成本的大小关系</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📈 折线图</span>
+            <h4>chart_04：可优化成本日趋势</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">date（x轴）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">optimize_cost（主值，格式：¥#,##0）、charge_track（对比值，格式：¥#,##0）、charge_use（对比值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第2行 第1列，占1行12列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 支持按app_name、event_name、region、bu_dept1_name下钻</div>
+            <div class='chart-design-notes'>三条折线展示总可优化成本、采集成本、使用成本的日趋势，占满整行突出趋势分析。支持按App、事件、地域、部门下钻</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📊 条形图</span>
+            <h4>chart_05：各App可优化成本排名</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">app_name（y轴）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">optimize_cost（主值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第3行 第1列，占1行6列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 点击app_name可联动chart_06、chart_07（联动维度：app_name）；支持按event_name下钻</div>
+            <div class='chart-design-notes'>App成本排名用条形图（项多时优于柱状图），Top15，点击app可联动查看该app下的事件成本分布和明细</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📊 条形图</span>
+            <h4>chart_06：各事件可优化成本排名</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">event_name（y轴）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">optimize_cost（主值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第3行 第7列，占1行6列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 点击event_name可联动chart_05、chart_07（联动维度：event_name）；支持按app_name下钻</div>
+            <div class='chart-design-notes'>事件成本排名，与App排名左右并列，支持联动。点击事件可查看该事件在各App的分布</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📊 堆叠柱状图</span>
+            <h4>chart_07：优化类型成本分布</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">opt_flg（x轴）、app_name（颜色分组）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">optimize_cost（主值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第4行 第1列，占1行6列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 点击opt_flg可联动chart_08（联动维度：opt_flg）</div>
+            <div class='chart-design-notes'>堆叠柱状图展示不同优化类型（opt_flg）下各App的成本分布，帮助判断哪种优化方向最值得投入。颜色分组为app_name，限制Top10 app</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📊 柱状图</span>
+            <h4>chart_08：各地区可优化成本分布</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">region（x轴）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">optimize_cost（主值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第4行 第7列，占1行6列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 点击region可联动chart_07（联动维度：region）</div>
+            <div class='chart-design-notes'>柱状图展示不同地域的可优化成本差异，与优化类型分布左右并列，支持联动</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📊 堆叠柱状图</span>
+            <h4>chart_09：部门成本分布</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">bu_dept1_name（x轴）、bu_dept2_name（颜色分组）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">optimize_cost（主值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第5行 第1列，占1行12列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 点击bu_dept1_name可联动chart_05、chart_06（联动维度：bu_dept1_name）</div>
+            <div class='chart-design-notes'>堆叠柱状图展示一级部门下各二级部门的成本分布，帮助部门管理者研判优化空间。占满整行突出部门维度分析</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-type-badge">📋 数据表格</span>
+            <h4>chart_10：可优化事件明细</h4>
+          </div>
+          <div class="chart-card-body">
+            <div class="chart-meta-grid">
+              <div class="chart-meta-item">
+                <span class="meta-label">关联模型</span>
+                <span class="meta-value code">dm_optimize_event_cost_daily</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">维度</span>
+                <span class="meta-value">event_guid（列维度）、event_name（列维度）、event_name_cn（列维度）、app_name（列维度）、region（列维度）、opt_flg（列维度）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">指标</span>
+                <span class="meta-value">charge_track（主值，格式：¥#,##0）、charge_use（辅助值，格式：¥#,##0）、optimize_cost（辅助值，格式：¥#,##0）</span>
+              </div>
+              <div class="chart-meta-item">
+                <span class="meta-label">位置</span>
+                <span class="meta-value">第6行 第1列，占1行12列</span>
+              </div>
+            </div>
+            <div class='chart-interaction'><span class='interaction-tag'>交互</span> 无</div>
+            <div class='chart-design-notes'>明细数据表格，展示可优化事件的完整信息，支持排序和翻页，放在最底部作为明细层</div>
+          </div>
+        </div></div>
+  </div>
+
+  
+        <div class="subsection">
+          <h3>全局筛选器</h3>
+          <div class="filter-list">
+                <div class="filter-tag">
+                  <span class="filter-name">日期范围</span>
+                  <span class="filter-type">日期范围</span>
+                </div>
+                <div class="filter-tag">
+                  <span class="filter-name">应用名称</span>
+                  <span class="filter-type">多选</span>
+                </div>
+                <div class="filter-tag">
+                  <span class="filter-name">地域</span>
+                  <span class="filter-type">多选</span>
+                </div>
+                <div class="filter-tag">
+                  <span class="filter-name">事件名称</span>
+                  <span class="filter-type">多选</span>
+                </div>
+                <div class="filter-tag">
+                  <span class="filter-name">优化类型</span>
+                  <span class="filter-type">多选</span>
+                </div>
+                <div class="filter-tag">
+                  <span class="filter-name">二级部门</span>
+                  <span class="filter-type">多选</span>
+                </div></div>
+        </div>
+</section>
+
+
+<section id="sec-confirm" class="report-section confirm-section">
+  <h2 class="section-heading"><span class="heading-num">四</span> 待确认项清单</h2>
+
+  <div class="confirm-stats">
+    <div class="stat-card">
+      <div class="stat-number">12</div>
+      <div class="stat-label">待确认项</div>
+    </div>
+    <div class="stat-card stat-colorred"><div class="stat-number">1</div><div class="stat-label">指标口径</div></div><div class="stat-card stat-colorgray"><div class="stat-number">3</div><div class="stat-label">维度字段</div></div><div class="stat-card stat-colororange"><div class="stat-number">1</div><div class="stat-label">数据源</div></div><div class="stat-card stat-colorblue"><div class="stat-number">3</div><div class="stat-label">过滤条件</div></div><div class="stat-card stat-coloryellow"><div class="stat-number">1</div><div class="stat-label">维度粒度</div></div><div class="stat-card stat-colorteal"><div class="stat-number">1</div><div class="stat-label">图表类型</div></div><div class="stat-card stat-colorteal"><div class="stat-number">1</div><div class="stat-label">布局</div></div><div class="stat-card stat-coloryellow"><div class="stat-number">1</div><div class="stat-label">维度选择</div></div>
+  </div>
+
+  <div class="confirm-tip">
+    以下项目需要在搭建前完成确认，按风险从高到低排列。确认后请勾选复选框。
+  </div>
+
+  <div class="confirm-cards-grid">
+        <div class="confirm-card" style="border-left-color: var(--color-red);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#1</span>
+            <span class="confirm-category" style="background: rgba(var(--color-red-rgb), 0.12); color: var(--color-red);">指标口径</span>
+          </div>
+          <p class="confirm-content">**可优化成本的计算范围**：是否仅对与dwm_bill_optimize_event_v2_df关联成功的事件行求和？还是对主表所有事件行求和？</p>
+          <p class="confirm-risk">如果对主表所有事件行求和，则无法区分可优化与不可优化事件，看板失去&quot;圈定可优化事件&quot;的核心目标</p>
+          <div class="confirm-suggestion">建议仅对与dwm_bill_optimize_event_v2_df关联成功（即event_guid和date均匹配）的事件行求和，因为该表明确标识了所有可优化事件</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-gray);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#2</span>
+            <span class="confirm-category" style="background: rgba(var(--color-gray-rgb), 0.12); color: var(--color-gray);">维度字段</span>
+          </div>
+          <p class="confirm-content">**track_app_info表中未找到&#x27;app_name&#x27;字段**，上游key_fields为{&#x27;name&#x27;, &#x27;real_app_id&#x27;, &#x27;owner&#x27;, &#x27;project_id&#x27;}，当前使用&#x27;name&#x27;字段作为app_name</p>
+          <p class="confirm-risk">如果name字段不是应用名称，则app_name维度数据错误</p>
+          <div class="confirm-suggestion">建议确认track_app_info.name字段是否就是应用名称（app_name）</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-gray);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#3</span>
+            <span class="confirm-category" style="background: rgba(var(--color-gray-rgb), 0.12); color: var(--color-gray);">维度字段</span>
+          </div>
+          <p class="confirm-content">**track_app_info表中未找到&#x27;app_owner&#x27;字段**，上游key_fields为{&#x27;name&#x27;, &#x27;real_app_id&#x27;, &#x27;owner&#x27;, &#x27;project_id&#x27;}，当前使用&#x27;owner&#x27;字段作为app_owner</p>
+          <p class="confirm-risk">如果owner字段不是应用负责人，则app_owner维度数据错误</p>
+          <div class="confirm-suggestion">建议确认track_app_info.owner字段是否就是应用负责人（app_owner）</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-gray);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#4</span>
+            <span class="confirm-category" style="background: rgba(var(--color-gray-rgb), 0.12); color: var(--color-gray);">维度字段</span>
+          </div>
+          <p class="confirm-content">**track_event_info表中未找到&#x27;event_name_cn&#x27;字段**，上游key_fields为{&#x27;name&#x27;, &#x27;display_name&#x27;, &#x27;project_id&#x27;}，当前使用&#x27;display_name&#x27;字段作为event_name_cn</p>
+          <p class="confirm-risk">如果display_name字段不是事件中文名，则event_name_cn维度数据错误</p>
+          <div class="confirm-suggestion">建议确认track_event_info.display_name字段是否就是事件中文名（event_name_cn）</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-orange);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#5</span>
+            <span class="confirm-category" style="background: rgba(var(--color-orange-rgb), 0.12); color: var(--color-orange);">数据源</span>
+          </div>
+          <p class="confirm-content">**track_event_info表的关联方式**：主表通过event_name关联，但track_event_info的key_fields中name字段是否与主表event_name完全一致？</p>
+          <p class="confirm-risk">如果字段值格式不一致（如大小写、空格差异），会导致事件中文名无法匹配，影响event_name_cn维度的可用性</p>
+          <div class="confirm-suggestion">建议确认两个字段的值格式是否一致，必要时使用UPPER/TRIM等函数处理</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-blue);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#6</span>
+            <span class="confirm-category" style="background: rgba(var(--color-blue-rgb), 0.12); color: var(--color-blue);">过滤条件</span>
+          </div>
+          <p class="confirm-content">**is_delete = &#x27;0&#x27;过滤条件**：仅应用于track_event_info表，但该表通过event_name关联主表，是否会影响主表行数？</p>
+          <p class="confirm-risk">如果track_event_info中某事件被删除（is_delete=1），LEFT JOIN后该事件的中文名为NULL，但主表行数不受影响。如果业务期望只展示未被删除的事件，则需要改为INNER JOIN</p>
+          <div class="confirm-suggestion">建议确认：是否期望只展示未被删除的事件？如果是，需将LEFT JOIN改为INNER JOIN</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-blue);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#7</span>
+            <span class="confirm-category" style="background: rgba(var(--color-blue-rgb), 0.12); color: var(--color-blue);">过滤条件</span>
+          </div>
+          <p class="confirm-content">**app_id != null过滤条件**：主表app_id字段是否可能存在NULL值？</p>
+          <p class="confirm-risk">如果主表app_id存在NULL值，过滤后会导致部分事件行丢失，影响成本统计的完整性</p>
+          <div class="confirm-suggestion">建议确认主表app_id字段是否有NULL值，以及是否确实需要排除</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-blue);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#8</span>
+            <span class="confirm-category" style="background: rgba(var(--color-blue-rgb), 0.12); color: var(--color-blue);">过滤条件</span>
+          </div>
+          <p class="confirm-content">**bu_dept1_name = &#x27;手机部&#x27;过滤条件**：应用于去重后的onetrack部门维度表，如果某app在手机部但onetrack表中无对应记录，则该app的数据会被过滤掉</p>
+          <p class="confirm-risk">可能导致部分手机部app的成本数据丢失</p>
+          <div class="confirm-suggestion">建议确认：是否所有手机部app在onetrack表中都有对应的部门记录？如果否，需调整过滤逻辑</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-yellow);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#9</span>
+            <span class="confirm-category" style="background: rgba(var(--color-yellow-rgb), 0.12); color: var(--color-yellow);">维度粒度</span>
+          </div>
+          <p class="confirm-content">**dwm_bill_event_onetrack_charge_share_di作为维度表使用时**，按app_id,date去重后，bu_dept1_name和bu_dept2_name是否唯一？</p>
+          <p class="confirm-risk">如果同一个app_id在同一个date下存在多个不同的部门归属，去重后只能保留一条记录，可能导致部门归属信息不准确</p>
+          <div class="confirm-suggestion">建议确认app_id与部门的对应关系是否稳定，是否存在同一app_id在不同日期归属不同部门的情况</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-teal);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#10</span>
+            <span class="confirm-category" style="background: rgba(var(--color-teal-rgb), 0.12); color: var(--color-teal);">图表类型</span>
+          </div>
+          <p class="confirm-content">**优化类型成本分布（chart_07）**：当前使用堆叠柱状图展示不同opt_flg下各App的成本分布，是否改为环形图展示优化类型的整体占比？</p>
+          <p class="confirm-risk">如果opt_flg分类超过6个，环形图可读性下降；堆叠柱状图能同时展示App分布，信息量更大</p>
+          <div class="confirm-suggestion">建议保留堆叠柱状图，因为可以同时展示优化类型和App两个维度的信息</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-teal);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#11</span>
+            <span class="confirm-category" style="background: rgba(var(--color-teal-rgb), 0.12); color: var(--color-teal);">布局</span>
+          </div>
+          <p class="confirm-content">**第3行布局**：当前App排名和事件排名左右并列（各占6列），是否将事件排名放在App排名下方（占满12列）以突出App维度的优先级？</p>
+          <p class="confirm-risk">如果用户更关注事件维度，当前并列布局更高效；如果用户更关注App维度，上下布局更符合视线流</p>
+          <div class="confirm-suggestion">建议保留并列布局，因为两个维度同等重要，且用户可通过联动交互切换视角</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div>
+        <div class="confirm-card" style="border-left-color: var(--color-yellow);">
+          <div class="confirm-card-top">
+            <span class="confirm-index">#12</span>
+            <span class="confirm-category" style="background: rgba(var(--color-yellow-rgb), 0.12); color: var(--color-yellow);">维度选择</span>
+          </div>
+          <p class="confirm-content">**app_owner维度未在图表中使用**，是否需要在某个图表中展示按app_owner聚合的成本分布？</p>
+          <p class="confirm-risk">如果app负责人需要查看自己负责app的成本，缺少该维度可能导致用户无法快速定位</p>
+          <div class="confirm-suggestion">建议在全局筛选器中保留app_owner筛选器，或在App排名图表中增加app_owner作为颜色分组</div>
+          <label class="confirm-check">
+            <input type="checkbox" />
+            <span>已确认</span>
+          </label>
+        </div></div>
+</section>
+
+
+<section id="sec-steps" class="report-section">
+  <h2 class="section-heading"><span class="heading-num">五</span> 搭建步骤建议</h2>
+  <div class="steps-timeline">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>确认待确认项</strong>
+            <p>先完成第四章的所有确认项，特别是指标口径相关（#1）和维度字段相关（#2-#4），这些直接影响数据准确性</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>创建语义模型</strong>
+            <p>在BI平台创建语义模型<code>dm_optimize_event_cost_daily</code>，粘贴第二章的完整SQL，验证字段解析是否正确</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>调整维度/指标</strong>
+            <p>检查BI平台自动解析的维度和指标，按第二章的维度配置表和指标配置表手动调整：</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <strong>创建看板</strong>
+            <p>选择语义模型，按第三章顺序添加10个图表，配置每个图表的维度、指标、排序和格式</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <strong>配置筛选器</strong>
+            <p>添加6个全局筛选器（日期范围、应用名称、地域、事件名称、优化类型、二级部门），按配置设置默认值</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <strong>配置交互</strong>
+            <p>- 设置chart_01/02/03的日期联动（联动chart_04/05/06/07）</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">7</div>
+          <div class="step-content">
+            <strong>验证数据</strong>
+            <p>用已知数据验证关键指标的准确性，特别是可优化成本的计算逻辑（仅对关联成功的事件行求和）</p>
+          </div>
+        </div></div>
+</section>
+
+<div class="report-footer">
+  <p>本文档由看板开发 Agent 自动生成 · 人机协作 · 请审核确认项后执行搭建</p>
+</div>
+
+  </main>
+</div>
+<script>
+
+// Copy SQL
+function copySql(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const text = el.textContent || el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.closest('.sql-block').querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '已复制';
+    btn.style.color = '#3fb950';
+    btn.style.borderColor = 'rgba(63, 185, 80, 0.3)';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+
+// Sidebar active state on scroll
+const sections = document.querySelectorAll('.report-section');
+const navItems = document.querySelectorAll('.nav-item');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navItems.forEach(item => item.classList.remove('active'));
+      const id = entry.target.id;
+      const activeNav = document.querySelector(`.nav-item[href="#${id}"]`);
+      if (activeNav) activeNav.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(section => observer.observe(section));
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+</script>
+</body>
+</html>
